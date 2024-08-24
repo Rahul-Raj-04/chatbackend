@@ -7,10 +7,10 @@ import { ApiError } from "../../utils/ApiError.js";
 import fs from "fs";
 import { uploadOnCloudinary } from "../../utils/Cloudinary.js";
 import { v2 as cloudinary } from "cloudinary"
-import{upload} from "../../middlewares/FileUpload.middlwares.js"
+import { upload } from "../../middlewares/FileUpload.middlwares.js"
 import dotenv from 'dotenv';
 
-dotenv.config(); 
+dotenv.config();
 const generateAccessAndRefereshTokens = async (userId) => {
   try {
     const user = await User.findById(userId);
@@ -54,21 +54,18 @@ const registerUser = asyncHandler(async (req, res) => {
       lastName,
       contactNumber,
       emailAddress,
-      linkedinProfile,
-      address,
-      skills,
-      honoursAndCertifications,
+
     ].some((field) => field?.trim() === "")
   ) {
     throw new ApiError(
       400,
-      "First Name, Last Name, Contact Number, Email Address, and all field are required"
+      "First Name, Last Name, Contact Number, Email Address,  are required"
     );
   }
 
   // Check if user already exists (by username or email)
   const existedUser = await User.findOne({
-    $or: [{ username: `CTHUSER${firstName}` }, { emailAddress }],
+    $or: [{ username: `cth${firstName}` }, { emailAddress }],
   });
 
   if (existedUser) {
@@ -117,7 +114,7 @@ const loginUser = async (req, res) => {
       const refreshToken = user.generateRefreshToken();
 
       user.refreshToken = refreshToken;
-      user.loginTime = new Date();
+      user.LoginTime = new Date();
       await user.save({ validateBeforeSave: false });
 
       return { accessToken, refreshToken };
@@ -162,7 +159,7 @@ const loginUser = async (req, res) => {
       "-password -refreshToken"
     );
     user.loginTime = Date.now();
-    user.Active=true
+    user.Active = true
     await user.save({ validateBeforeSave: false });
 
     // Set options for cookies
@@ -214,8 +211,8 @@ const logoutUser = async (req, res) => {
     }
 
     // Set login status to false
-    user.lastActive=Date.now();
-    user.Active=false;
+    user.lastActive = Date.now();
+    user.Active = false;
     await user.save({ validateBeforeSave: false });
 
     // Clear cookies (optional)
@@ -291,7 +288,7 @@ const updateUser = asyncHandler(async (req, res) => {
     academicProjects: academicProjects || user.academicProjects,
     honoursAndCertifications:
       honoursAndCertifications || user.honoursAndCertifications,
-    AccountStatus:AccountStatus||user.AccountStatus,
+    AccountStatus: AccountStatus || user.AccountStatus,
 
   };
 
@@ -351,7 +348,7 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 
 const uploadProfilePhoto = asyncHandler(async (req, res) => {
   const userId = req.params.userId || req.body.userId || req.query.userId;
-  
+
   if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
     throw new ApiError(400, "Invalid user ID");
   }
@@ -379,7 +376,7 @@ const uploadProfilePhoto = asyncHandler(async (req, res) => {
   // Delete old profile photo if it exists
   if (user.profilePhoto) {
     const oldPublicId = user.profilePhoto.split('/').pop().split('.')[0];
-    
+
     try {
       await cloudinary.uploader.destroy(oldPublicId);
       console.log('Old profile photo deleted successfully from Cloudinary');
@@ -400,15 +397,15 @@ const uploadProfilePhoto = asyncHandler(async (req, res) => {
     new ApiResponse(200, { profilePhoto: updatedUser.profilePhoto }, "Profile photo uploaded successfully")
   );
 });
-const removeProfilePhoto=asyncHandler(async (req, res) => {
+const removeProfilePhoto = asyncHandler(async (req, res) => {
   const userId = req.params.userId || req.body.userId || req.query.userId;
-  
+
   if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
     throw new ApiError(400, "Invalid user ID");
   }
 
   if (!req.files || !req.files.profilePhoto) {
-    throw new ApiError(400, "Profile photo not found"); 
+    throw new ApiError(400, "Profile photo not found");
   }
 
   const user = await User.findById(userId);
@@ -422,7 +419,7 @@ const removeProfilePhoto=asyncHandler(async (req, res) => {
   }
 
   // Delete old profile photo if it exists
-  if (user.profilePhoto&&user.profilePhoto!="") {
+  if (user.profilePhoto && user.profilePhoto != "") {
     const oldPublicId = user.profilePhoto.split('/').pop().split('.')[0];
     try {
       await cloudinary.uploader.destroy(oldPublicId);
@@ -445,18 +442,18 @@ const getStatus = asyncHandler(async (req, res) => {
   const user = await User.findById(userId);
   if (user.Active) {
     return res
-    .status(200)
-    .json(new ApiResponse(200, { Status:'Online' }, ""));
+      .status(200)
+      .json(new ApiResponse(200, { Status: 'Online' }, ""));
   }
-  else{
+  else {
     return res
-    .status(200)
-    .json(new ApiResponse(200, { Status:'Offline',lastActive:user.lastActive }, ""));
+      .status(200)
+      .json(new ApiResponse(200, { Status: 'Offline', lastActive: user.lastActive }, ""));
   }
 });
 const updateUserPrivacy = asyncHandler(async (req, res) => {
   const userId = req.params.userId || req.body.userId || req.query.userId;
-  const {LastSeen, ReadReceipt, Status, profilePhotoVisibility } = req.body;
+  const { LastSeen, ReadReceipt, Status, profilePhotoVisibility } = req.body;
 
   if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
     throw new ApiError(400, "Invalid user ID");
@@ -466,12 +463,12 @@ const updateUserPrivacy = asyncHandler(async (req, res) => {
   if (!user) {
     throw new ApiError(404, "User not found");
   }
-const updateData={
-  LastSeen:LastSeen ?? user.LastSeen,
-  ReadReceipt: ReadReceipt ?? user.ReadReceipt,
-  Status:Status ?? user.Status,
-  profilePhotoVisibility:profilePhotoVisibility ?? user.profilePhotoVisibility
-}
+  const updateData = {
+    LastSeen: LastSeen ?? user.LastSeen,
+    ReadReceipt: ReadReceipt ?? user.ReadReceipt,
+    Status: Status ?? user.Status,
+    profilePhotoVisibility: profilePhotoVisibility ?? user.profilePhotoVisibility
+  }
 
   const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
     new: true,

@@ -75,7 +75,11 @@ io.on("connection", asyncHandler(async (socket) => {
   // Handle incoming messages
   socket.on("message", (data) => {
     console.log(`Message received from user ${userId}:`, data);
-    // Broadcast message to all connected clients
+    if (data.content && data.image) {
+      // Agar content me image ka data hai to usko handle karein
+      console.log("Image received:", data.image);
+    }
+
     io.emit("message", { ...data, userId });
   });
 
