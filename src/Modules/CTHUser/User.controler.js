@@ -32,7 +32,6 @@ const generateAccessAndRefereshTokens = async (userId) => {
     );
   }
 };
-
 const registerUser = asyncHandler(async (req, res) => {
   const {
     firstName,
@@ -54,12 +53,11 @@ const registerUser = asyncHandler(async (req, res) => {
       lastName,
       contactNumber,
       emailAddress,
-
     ].some((field) => field?.trim() === "")
   ) {
     throw new ApiError(
       400,
-      "First Name, Last Name, Contact Number, Email Address,  are required"
+      "First Name, Last Name, Contact Number, Email Address, are required"
     );
   }
 
@@ -79,7 +77,6 @@ const registerUser = asyncHandler(async (req, res) => {
   const username = `CTHUSER${firstName}`;
 
   // Create user object
-  //   const hashedOTP = await bcrypt.hash(OTP, 10);
   const user = await User.create({
     firstName,
     lastName,
@@ -96,10 +93,28 @@ const registerUser = asyncHandler(async (req, res) => {
   });
 
   // Fetch created user without password and refreshToken fields
-  const createdUser = await User.findById(user._id).select(" -refreshToken");
+  const createdUser = await User.findById(user._id).select("-refreshToken");
 
   if (!createdUser) {
     throw new ApiError(500, "Something went wrong while registering the user");
+  }
+
+  // Add the newly created user to the CTHMain group
+  try {
+    const cthMainGroup = await Chat.findOne({ chatName: "HALL 1 (General)", isGroupChat: true });
+    if (cthMainGroup) {
+      // Add new user to the group
+      if (!cthMainGroup.users.includes(user._id)) {
+        cthMainGroup.users.push(user._id);
+        await cthMainGroup.save();
+        console.log(`User ${createdUser.username} added to HALL 1 (General) group.`);
+      }
+    } else {
+      // Handle case where CTHMain group does not exist
+      console.error("HALL 1 (General) group does not exist.");
+    }
+  } catch (error) {
+    console.error("Error adding user to CTHMain group:", error.message);
   }
 
   return res
