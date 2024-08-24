@@ -9,6 +9,7 @@ import { uploadOnCloudinary } from "../../utils/Cloudinary.js";
 import { v2 as cloudinary } from "cloudinary"
 import { upload } from "../../middlewares/FileUpload.middlwares.js"
 import dotenv from 'dotenv';
+import { Chat } from "../Chats/Chat.model.js";
 
 dotenv.config();
 const generateAccessAndRefereshTokens = async (userId) => {
