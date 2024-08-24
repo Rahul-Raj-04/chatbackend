@@ -44,7 +44,27 @@ const accessChat = asyncHandler(async (req, res) => {
     }
   }
 });
+const createCTHMainGroup = async () => {
+  try {
+    const groupExists = await Chat.findOne({ chatName: "HALL 1 (General)", isGroupChat: true });
+    if (!groupExists) {
+      const users = await User.find();
+      if (users.length === 0) return;
 
+      const groupChat = await Chat.create({
+        chatName: "HALL 1 (General)",
+        users: users.map(user => user._id),
+        isGroupChat: true,
+        groupAdmin: users[0]._id, // Setting the first user as the group admin
+      });
+
+      console.log("HALL 1 (General) group created successfully with all users.");
+    }
+  } catch (error) {
+    console.error("Error creating CTHMain group:", error.message);
+  }
+};
+createCTHMainGroup();
 const fetchChats = asyncHandler(async (req, res) => {
   try {
     Chat.find({ users: { $elemMatch: { $eq: req.user } } })
@@ -215,5 +235,6 @@ export {
   renameGroup,
   addToGroup,
   removeFromGroup,
-  fetchSingleChat
+  fetchSingleChat,
+  createCTHMainGroup,
 };
